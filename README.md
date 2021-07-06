@@ -28,3 +28,4 @@ rm|直接用的大佬的[接口](http://nymph.rbq.life:3000/rm/robot/)
 
 [httpapi插件下载](https://wwi.lanzoui.com/iLCn3r36s9i)
 [小栗子免费版框架下载](https://wwi.lanzoui.com/iuxq6r36rzi)
+如需修改打包请在控制台直接打包botMain.spec 
