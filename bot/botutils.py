@@ -48,3 +48,12 @@ def groupmsg(logonqq,group,msg):
         'anonymous':'false'
     }
     requests.post(url, data=data)
+#添加群
+def addgroup(logonqq,group):
+    url = configs.get('url')+'/addgroup'
+    data = {
+        'logonqq': logonqq,
+        'group': group,
+        'msg': '你好我是奥迪斯'
+    }
+    requests.post(url,data=data)

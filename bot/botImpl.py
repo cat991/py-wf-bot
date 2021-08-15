@@ -30,18 +30,39 @@ def dayTime():
     resp = json.loads(resp.text)
     day = resp['cetus']['day']
     times = resp['cetus']['cetusTime']
-    if day == True:
+    if day:
         times = int(times) - int(time.time())
         hours = time.strftime('%H', time.localtime(times))
         hours = int(hours)-8
         time1 = time.strftime('%M分%S秒', time.localtime(times))
-        return f'现在时间是--白天--\n剩余时间:{hours}时{time1}'
+        return f'\t\n现在时间是--白天--\n剩余时间:{hours}时{time1}'
     else:
         times = times - int(time.time())
         hours = time.strftime('%H', time.localtime(times))
         hours = int(hours)-8
         time1 = time.strftime('%M分%S秒', time.localtime(times))
-        return f'现在时间是--晚上--\n剩余时间:{hours}时{time1}'
+        return f'\t\n现在时间是--晚上--\n剩余时间:{hours}时{time1}'
+
+
+#奸商信息
+def voidTrader():
+    resp = requests.get('https://api.null00.com/world/ZHCN')
+    resp = json.loads(resp.text)
+    arrivals = resp['voidTrader']['arrivals']
+    times = resp['voidTrader']['expiry']
+    place = resp['voidTrader']['node']
+    # times = int(times) - 28800000
+    if arrivals:
+        guofu = f'\t\n-------国服-------\n奸商已抵达：{place}'
+    else:
+        times = times - int(time.time())
+        hours = time.strftime('%H', time.localtime(times))
+        hours = int(hours) - 8
+        time1 = time.strftime('%M分%S秒', time.localtime(times))
+        guofu = f'\t\n-------国服-------\n奸商到来时间还剩：{hours}时{time1} \n地点：{place}'
+    guojifu = requests.get('http://nymph.rbq.life:3000/wf/robot/voidTrader').text
+    return f'{guofu}\n\n-------国际服-------\n{guojifu}'
+
 
 #星际战甲金星温度判断
 def states(state):
@@ -55,6 +76,8 @@ def states(state):
        return '寒冷'
     elif state ==5:
         return '极寒'
+
+
 #星际战甲金星温度
 def jxwd():
     resp = requests.get('https://api.null00.com/world/ZHCN')
@@ -64,6 +87,15 @@ def jxwd():
     times =times-int(time.time())
     time1 = time.strftime('%M分%S秒', time.localtime(times))
     return f'现在温度是--{states(int(state))}--\n{time1}后切换\n--{states(state+1)}--'
+#火卫二时间
+def hw2():
+    resp = requests.get('http://nymph.rbq.life:3000/wf/robot/cambionCycle').text
+    if 'fass' in resp:
+        return resp.replace('fass','毁灭(fass)')
+    else:
+        return resp.replace('vome','秩序(vome)')
+
+
 #warframe玄骸紫卡交易
 def wfrm(loginqq, group,str):
     resp = requests.get(f'http://nymph.rbq.life:3000/rm/robot/{str.replace(" ","")}')
@@ -71,13 +103,19 @@ def wfrm(loginqq, group,str):
 
 
 #warframe物品交易
-def wfwm(str):
-    str['mod_rank'] = int(str['mod_rank'])
-    resp = requests.get(f'https://api.warframe.market/v1/items/{str["itme"]}/orders?include=item')
-    resp = json.loads(resp.text)
+def wfwm(msg, mod_rank):
+    str = {}
+    str['itme'] = botci(msg)
+    str['mod_rank'] = int(mod_rank)
+    str['str'] = msg
+    try:
+        resp = requests.get(f'https://api.warframe.market/v1/items/{str["itme"].replace(" ", "_").lower()}/orders?include=item')
+        resp = json.loads(resp.text)
+    except:
+        return str['itme']
     orderslist = resp['payload']['orders']
     orderslist = sorted(orderslist, key=lambda x: x["platinum"], reverse=False)
-    orderre = f'\n默认展示价格最低前10个\n你要搜索的是：{str["str"]}'
+    orderre = f'\t\n默认展示价格最低前10个\n你要搜索的是：{str["str"]} \n翻译：{str["itme"]}'
     cont = 0 #统计10个
     number = 0 #统计全部价格
     conts = 0 #统计全部
@@ -102,29 +140,33 @@ def wfwm(str):
             # orderre += f'\n在线状态：{"在线" if state != "offline" else "离线"}\n白金:{baijin}---游戏昵称: {name}'
 
     if cont == 0:
-        return '没有该商品或并没有查到该等级的商品'
+        return '\t\n没有该商品或并没有查到该等级的商品'
     else:
         return orderre + f'\n总出售人数{conts}人，平均:{int(number/conts)}白鸡'
 
 #翻译&warframe查字典
-def botci(str,mod_rank):
+def botci(str):
     resp = requests.get(f'http://nymph.rbq.life:3000/dict/tran/robot/{str.replace(" ","")}').text
     num = 0
-    ret ={}
+    # ret ={}
+    txt = ''
     for lis in resp.split('\n'):
         num +=1
         if num ==2:
             itme = re.findall(f'\\[(.*?)]',lis)
-            ret={
-                'itme':itme[0].replace(' ', '_').lower(),
-                 'str':itme[0],
-                'mod_rank':mod_rank
-            }
+            txt = itme[0]
+            # txt = itme[0].replace(' ', '_').lower()
+            # ret={
+            #     'itme':itme[0].replace(' ', '_').lower(),
+            #      'str':itme[0],
+            #     'mod_rank':mod_rank
+            # }
     try:
-        return wfwm(ret)
+        # return wfwm(ret)
+        return txt
     except:
         return resp
 
 #菜单
 def caidan():
-    return f'你要的菜单来了\n---菜单---\n战甲攻略  关键词\nwiki  关键词\n物品交易: wm \n紫卡玄骸交易：rm\n平原时间 \n金星温度'
+    return f'\t\n你要的菜单来了\n---菜单---\n战甲攻略  关键词\nwiki  关键词\n物品交易: wm \n紫卡玄骸交易：rm\n平原时间 \n金星温度 \n火卫二 \n虚空商人 \n ↓↓↓主人指令↓↓↓\n添加群 + 群号'

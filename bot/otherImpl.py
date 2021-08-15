@@ -1,9 +1,20 @@
 from PIL import Image, ImageDraw, ImageFont
 from bot import botutils
 import win32api,win32con
+from bot.langconv import *
 LINE_CHAR_COUNT = 30*2  # 每行字符数：30个中文字符(=60英文字符)
 CHAR_SIZE = 30
 TABLE_WIDTH = 4
+
+def TraditionalToSimplified(line):          #繁体转简体
+    line=Converter("zh-hans").convert(line)
+    return line
+
+
+def SimplifiedToTraditional(line):          #简体转繁体
+    line=Converter("zh-hant").convert(line)
+    return line
+
 
 def line_break(line):
     ret = ''
