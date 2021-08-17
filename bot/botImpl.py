@@ -1,6 +1,7 @@
 import json,time,re
 import requests
 from bot import otherImpl
+import os,sys
 headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36"}
 
@@ -19,7 +20,7 @@ def ordis(msg):
 def wiki(search):
     resp = requests.get('https://warframe.huijiwiki.com/api.php?action=opensearch&search='+search,headers=headers)
     resp = json.loads(resp.text)
-    msg = '你要找的是\n'
+    msg = '\t\n你要找的是\n'
     for title, url in zip(resp[1], resp[3]):
         msg+=f'{title}\n{url}\n'
     return msg
@@ -55,11 +56,14 @@ def voidTrader():
     if arrivals:
         guofu = f'\t\n-------国服-------\n奸商已抵达：{place}'
     else:
+        times = int(times) - 288000
         times = times - int(time.time())
-        hours = time.strftime('%H', time.localtime(times))
-        hours = int(hours) - 8
-        time1 = time.strftime('%M分%S秒', time.localtime(times))
-        guofu = f'\t\n-------国服-------\n奸商到来时间还剩：{hours}时{time1} \n地点：{place}'
+        # hours = time.strftime('%H', time.localtime(times))
+        # hours = int(hours) - 8
+        print(times)
+        time1 = time.strftime('%d天%H时%M分%S秒', time.localtime(times))
+        print(time1)
+        guofu = f'\t\n-------国服-------\n奸商到来时间还剩：{time1} \n地点：{place}'
     guojifu = requests.get('http://nymph.rbq.life:3000/wf/robot/voidTrader').text
     return f'{guofu}\n\n-------国际服-------\n{guojifu}'
 
@@ -86,7 +90,7 @@ def jxwd():
     state = resp['solaris']['state']
     times =times-int(time.time())
     time1 = time.strftime('%M分%S秒', time.localtime(times))
-    return f'现在温度是--{states(int(state))}--\n{time1}后切换\n--{states(state+1)}--'
+    return f'\t\n现在温度是--{states(int(state))}--\n{time1}后切换\n--{states(state+1)}--'
 #火卫二时间
 def hw2():
     resp = requests.get('http://nymph.rbq.life:3000/wf/robot/cambionCycle').text
@@ -108,14 +112,14 @@ def wfwm(msg, mod_rank):
     str['itme'] = botci(msg)
     str['mod_rank'] = int(mod_rank)
     str['str'] = msg
+    resp = requests.get(f'https://api.warframe.market/v1/items/{str["itme"].replace(" ", "_").lower()}/orders?include=item')
+    resp = json.loads(resp.text)
     try:
-        resp = requests.get(f'https://api.warframe.market/v1/items/{str["itme"].replace(" ", "_").lower()}/orders?include=item')
-        resp = json.loads(resp.text)
+        orderslist = resp['payload']['orders']
+        orderslist = sorted(orderslist, key=lambda x: x["platinum"], reverse=False)
+        orderre = f'\t\n默认展示价格最低前10个\n你要搜索的是：{str["str"]} \n翻译：{str["itme"]}'
     except:
-        return str['itme']
-    orderslist = resp['payload']['orders']
-    orderslist = sorted(orderslist, key=lambda x: x["platinum"], reverse=False)
-    orderre = f'\t\n默认展示价格最低前10个\n你要搜索的是：{str["str"]} \n翻译：{str["itme"]}'
+        return '\t\n搜索出现了一点小状况,检查是否错别字或重新查询'
     cont = 0 #统计10个
     number = 0 #统计全部价格
     conts = 0 #统计全部
@@ -167,6 +171,41 @@ def botci(str):
     except:
         return resp
 
+def write_json(obj):
+    #首先读取已有的json文件中的内容
+    botpath = os.path.dirname(os.path.realpath(sys.argv[0])) + '\\botqq.json'
+    cont = 0
+    with open(botpath, 'r',encoding='utf-8') as f:
+        item_list = json.loads(f.read())
+        f.close()
+        for i in item_list:
+            if i['instruction'] == obj['instruction']:
+                item_list[cont]['content'] = obj['content']
+                with open('botqq.json', 'w', encoding='utf-8') as f2:
+                    json.dump(item_list, f2, ensure_ascii=False)
+                    f2.close()
+                return '口令修改成功'
+            cont += 1
+        else:
+            # #将新传入的dict对象追加至list中
+            item_list.append(obj)
+            # #将追加的内容与原有内容写回（覆盖）原文件
+
+            with open(botpath, 'w', encoding='utf-8') as f2:
+                json.dump(item_list, f2, ensure_ascii=False)
+                f2.close()
+            return '口令新增成功'
+#添加指令
+word = {}
+def password(msg):
+    instruction = msg[msg.index('新增口令'):msg.index('内容')].replace('新增口令','')
+    content = msg[msg.index('内容'):].replace('内容','')
+    word = {
+        'instruction': instruction,
+        'content' : content
+    }
+
+    return  write_json(word)
 #菜单
 def caidan():
     return f'\t\n你要的菜单来了\n---菜单---\n战甲攻略  关键词\nwiki  关键词\n物品交易: wm \n紫卡玄骸交易：rm\n平原时间 \n金星温度 \n火卫二 \n虚空商人 \n ↓↓↓主人指令↓↓↓\n添加群 + 群号'

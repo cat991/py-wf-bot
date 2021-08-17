@@ -1,11 +1,12 @@
 from flask import Flask, request
 import requests
 import time,json,re
-import os
+import os,sys
 from bot import botImpl,botutils,otherImpl
 from PIL import Image, ImageDraw, ImageFont
 app = Flask(__name__)
-master = 0 #主人qq
+master = True #主人qq
+
 #打包命令pyinstaller -F botMain.py  -p botImpl.py  -p botutils.py  -p otherImpl.py --hidden-import botImpl  --hidden-import botutils --hidden-import otherImpl
 
 configs={
@@ -13,6 +14,8 @@ configs={
     'url':"http://192.168.112.132:10429",
     'textcont': 0
 }
+
+
 #清空命令行
 def clear():
     if configs['textcont'] == 20:
@@ -45,7 +48,7 @@ def index():
         pass
 
 # {'type': 'privatemsg', 'fromqq': {'qq': 2996964572, 'qq2': 0, 'nickname': '黑猫'}, 'logonqq': 180802337, 'timestamp': {'recv': 1624788559, 'send': 1624788559}, 'fromgroup': {'group': 0}, 'msg': {'req': 39902, 'seq': 72057595659213644, 'random': 1621285708, 'type': 166, 'subtype': 134, 'subtemptype': 0, 'text': '吃好喝好', 'bubbleid': 0}, 'hb': {'type': 0}, 'file': {'id': '', 'md5': '', 'name': '', 'size': 0}, 'msgpart': {'seq': 0, 'count': 1, 'flag': 0}, 'sessiontoken': ''}
-    return '{msg:"成功"}'
+    return str(pass_list())
 #功能的实现
 def msg_type(data):
     loginqq = data['logonqq']  #框架qq
@@ -56,6 +59,11 @@ def msg_type(data):
         msg = otherImpl.TraditionalToSimplified(data['msg']['msg'])#群消息,并将繁体转成简体
         # fromqqname = data['fromqq']['card']#取群昵称
         group = data['fromgroup']['group'] #取群号
+        #指令输出
+        for i in pass_list():
+            if msg == i['instruction']:
+                    botutils.groupmsg(loginqq, group, atfromqq + i['content'])
+
         if msg[:4] == '战甲攻略':
             msg = msg[4:]
             botutils.groupmsg(loginqq, group, atfromqq + botImpl.ordis(msg))
@@ -79,8 +87,10 @@ def msg_type(data):
                 botutils.groupmsg(loginqq, group, atfromqq + '当前查询出现了一点小状况，请联系作者修复')
         elif msg == '菜单':
             botutils.groupmsg(loginqq, group, atfromqq + botImpl.caidan())
+
         elif msg == '奸商' or msg == '虚空商人':
             botutils.groupmsg(loginqq, group, atfromqq + botImpl.voidTrader())
+
         elif msg[:2] == '翻译':
             botutils.groupmsg(loginqq, group, atfromqq + botImpl.botci(msg[2:]))
 
@@ -105,6 +115,10 @@ def msg_type(data):
         elif msg[:3] == '添加群' and int(fromqq) == int(master):
              botutils.addgroup(loginqq,msg[3:])
              botutils.groupmsg(loginqq, group, atfromqq + '亲爱的，已经成功添加群聊哦~')
+        elif msg[:4] == '新增口令' and int(fromqq) == int(master):
+            botutils.groupmsg(loginqq, group, atfromqq + botImpl.password(msg))
+
+
     #处理私聊消息
     elif data['type'] == 'privatemsg':
         if int(fromqq) == int(master):
@@ -118,15 +132,40 @@ def msg_type(data):
             botutils.privatemsg(loginqq,fromqq,fromqqname+',暂时无私聊功能')
 
 
+#获取指令内容
+def pass_list():
+    botpath = os.path.dirname(os.path.realpath(sys.argv[0]))+'\\botqq.json'
+    try:
+        with open(botpath, 'r', encoding='utf-8') as f:
+            item_list = json.loads(f.read())
+            f.close()
+    except:
+        word = [{
+            'instruction': '口令',
+            'content': '新增的功能哦~'
+        }]
+        with open(botpath, 'w', encoding='utf-8') as f2:
+            json.dump(word, f2, ensure_ascii=False)
+            f2.close()
+    return item_list
+
 
 
 if __name__ == '__main__':
     botqq = list(json.loads(botutils.getlogonqq())['ret']['QQlist'])[0]
-    # print(json.loads(botutils.getlogonqq()))
-    # botqq = input('输入框架qq：')
-    print(f'当前框架qq是:{botqq}')
-    master = input('主人qq：')
-    botutils.privatemsg(botqq,master,'启动成功')
+    for i in pass_list():
+        if i['instruction'] == 'master':
+           print(f'当前框架qq是:{botqq}\n主人qq：{i["content"]}')
+           master = i['content']
+    if master == True:
+        print(f'当前框架qq是:{botqq}')
+        master = input('主人qq：')
+        word = {
+            'instruction': 'master',
+            'content': master
+        }
+        botImpl.write_json(word)
+    botutils.privatemsg(botqq, master, '启动成功')
     try:
         app.run(host='127.0.0.1', port=886, debug=False)  # 设置调试模式，生产模式的时候要关掉debug
         app.run()

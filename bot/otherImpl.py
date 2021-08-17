@@ -1,6 +1,6 @@
 from PIL import Image, ImageDraw, ImageFont
 from bot import botutils
-import win32api,win32con
+import win32api,win32con,os
 from bot.langconv import *
 LINE_CHAR_COUNT = 30*2  # 每行字符数：30个中文字符(=60英文字符)
 CHAR_SIZE = 30
@@ -49,9 +49,9 @@ def line_break(line):
 def get_desktop():
     key =win32api.RegOpenKey(win32con.HKEY_CURRENT_USER,r'Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders',0,win32con.KEY_READ)
     return win32api.RegQueryValueEx(key,'Desktop')[0]
+
 #开始制作图片
 def toImage(loginqq, group,txt,path):
-    print(get_desktop())
     output_str = line_break(txt)
     d_font = ImageFont.truetype('C:/Windows/Fonts/simsun.ttc', CHAR_SIZE)
     lines = output_str.count('\n')  # 计算行数
@@ -61,6 +61,6 @@ def toImage(loginqq, group,txt,path):
     draw_table.text(xy=(0, 0), text=output_str, fill='#000000', font= d_font, spacing=4)  # spacing调节机制不清楚如何计算
 
     # image.show()  # 直接显示图片
-    image.save(get_desktop()+'\\'+path+'.png', 'PNG')  # 保存在当前路径下，格式为PNG
+    image.save(os.path.dirname(os.path.realpath(sys.argv[0]))+'\\'+path+'.png', 'PNG')  # 保存在当前路径下，格式为PNG
     image.close()
     botutils.uploadgrouppic(loginqq, group,path)

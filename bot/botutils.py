@@ -1,6 +1,6 @@
 import requests
 import win32api,win32con
-import json
+import json,os,sys
 configs={
     'url':"http://127.0.0.1:10429",
     'textcont': 0
@@ -24,17 +24,16 @@ def privatemsg(login,toqq,text):
 def getlogonqq():
     url = configs.get('url')+'/getlogonqq'
     return requests.post(url).text
+#上传图片
 def uploadgrouppic(logonqq,group,path):
     url = configs.get('url')+'/uploadgrouppic'
     data={
         'logonqq': logonqq,
         'group': group,
         'type':"path",
-        'pic':get_desktop()+'\\'+path+'.png'
+        'pic':os.path.dirname(os.path.realpath(sys.argv[0]))+'\\'+path+'.png'
     }
-    print(data['pic'])
     resp = requests.post(url, data=data).text
-    print(resp)
     resp = json.loads(resp)
     groupmsg(logonqq,group,resp['ret'])
 #发送群聊消息

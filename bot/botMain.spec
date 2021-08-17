@@ -1,13 +1,14 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+
 block_cipher = None
 
 
 a = Analysis(['botMain.py'],
-             pathex=['botImpl.py', 'botutils.py', 'otherImpl.py', 'langconv.py', 'zh_wiki.py'],
+             pathex=['botImpl.py', 'botutils.py', 'otherImpl.py', 'E:\\pythonProject\\test1\\bot'],
              binaries=[],
              datas=[],
-             hiddenimports=['botImpl', 'botutils', 'otherImpl', 'langconv', 'zh_wiki'],
+             hiddenimports=['botImpl', 'botutils', 'otherImpl'],
              hookspath=[],
              runtime_hooks=[],
              excludes=[],
