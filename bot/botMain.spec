@@ -5,10 +5,10 @@ block_cipher = None
 
 
 a = Analysis(['botMain.py'],
-             pathex=['botImpl.py', 'botutils.py', 'otherImpl.py', 'E:\\pythonProject\\test1\\bot'],
+             pathex=['botImpl.py', 'botutils.py', 'otherImpl.py','jsonAndXml.py', 'E:\\pythonProject\\test1\\bot'],
              binaries=[],
              datas=[],
-             hiddenimports=['botImpl', 'botutils', 'otherImpl'],
+             hiddenimports=['botImpl', 'botutils', 'otherImpl','jsonAndXml'],
              hookspath=[],
              runtime_hooks=[],
              excludes=[],

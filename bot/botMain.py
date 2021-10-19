@@ -2,7 +2,7 @@ from flask import Flask, request
 import requests
 import time,json,re
 import os,sys
-from bot import botImpl,botutils,otherImpl
+from bot import botImpl,botutils,otherImpl,jsonAndXml
 from PIL import Image, ImageDraw, ImageFont
 app = Flask(__name__)
 master = True #主人qq
@@ -64,17 +64,34 @@ def msg_type(data):
             if msg == i['instruction']:
                     botutils.groupmsg(loginqq, group, atfromqq + i['content'])
 
-        if msg[:4] == '战甲攻略':
-            msg = msg[4:]
-            botutils.groupmsg(loginqq, group, atfromqq + botImpl.ordis(msg))
-        elif msg[:4] == '平原时间':
+        if msg[:2] == '攻略':
+            botutils.groupmsg(loginqq, group, atfromqq + botImpl.ordis(msg[2:]))
+        elif msg == '地球时间':
+            botutils.groupmsg(loginqq,group,atfromqq + botImpl.earthCycle())
+        elif msg == '平原时间':
             try:
                 botutils.groupmsg(loginqq, group, atfromqq + botImpl.dayTime())
             except:
                 botutils.groupmsg(loginqq, group, atfromqq + '正在进行昼夜更替，稍后查询哦')
+        elif msg == '仲裁' or msg == '仲裁任务':
+            botutils.groupmsg(loginqq, group, atfromqq + botImpl.arbitration())
         elif msg[:4].lower() == 'wiki':
-            msg = msg[4:]
-            botutils.groupmsg(loginqq, group, atfromqq + botImpl.wiki(msg))
+            botutils.groupmsg(loginqq, group, atfromqq + botImpl.wiki(msg[4:]))
+        elif msg == '测试':
+            pass
+            # botutils.groupmsg(loginqq, group, jsonAndXml.ceshi, 'xml')
+        elif msg == '二次元':
+            botutils.groupmsg(loginqq,group,botImpl.二次元(loginqq,group))
+        elif msg[:2] == '遗物':
+            botutils.groupmsg(loginqq,group,botImpl.search_relics(loginqq,group,msg[2:]))
+        elif '突击' in msg and len(msg) <= 5:
+            if msg =='突击':
+                botutils.groupmsg(loginqq, group, atfromqq + botImpl.sortie(0))
+            elif msg == '国服突击':
+                botutils.groupmsg(loginqq, group, atfromqq + botImpl.sortie(1))
+            elif msg == '国际服突击':
+                botutils.groupmsg(loginqq, group, atfromqq + botImpl.sortie(2))
+
         elif msg[:4]=='金星温度':
             try:
                 botutils.groupmsg(loginqq, group, atfromqq + botImpl.jxwd())
@@ -89,10 +106,15 @@ def msg_type(data):
             botutils.groupmsg(loginqq, group, atfromqq + botImpl.caidan())
 
         elif msg == '奸商' or msg == '虚空商人':
-            botutils.groupmsg(loginqq, group, atfromqq + botImpl.voidTrader())
-
+            try:
+                botutils.groupmsg(loginqq, group, atfromqq + botImpl.voidTrader())
+            except:
+                botutils.groupmsg(loginqq, group, atfromqq + '当前查询出现了一点小状况，请联系作者修复')
         elif msg[:2] == '翻译':
-            botutils.groupmsg(loginqq, group, atfromqq + botImpl.botci(msg[2:]))
+            botutils.groupmsg(loginqq, group,  botImpl.botci(msg[2:]))
+
+        elif msg == '查询口令':
+            botutils.groupmsg(loginqq, group,  botImpl.queryAll_json())
 
         elif msg[:2].lower()=='wm':
             mod_rank = ''
@@ -113,19 +135,27 @@ def msg_type(data):
             # botutils.groupmsg(loginqq, group, atfromqq + '查询的信息已通过私聊发送给您')
         #主人指令，群内添加群
         elif msg[:3] == '添加群' and int(fromqq) == int(master):
-             botutils.addgroup(loginqq,msg[3:])
+             botutils.privatemsg(loginqq, master,botutils.addgroup(loginqq,msg[3:]))
              botutils.groupmsg(loginqq, group, atfromqq + '亲爱的，已经成功添加群聊哦~')
         elif msg[:4] == '新增口令' and int(fromqq) == int(master):
             botutils.groupmsg(loginqq, group, atfromqq + botImpl.password(msg))
-
+        elif msg[:4] == '删除口令' and int(fromqq) == int(master):
+            botutils.groupmsg(loginqq, group, botImpl.delete_json(msg[4:]))
+        elif msg[:2] == '公告' and int(fromqq) == int(master):
+            botImpl.group_announcement(loginqq,msg[2:])
+            botutils.groupmsg(loginqq,group,"群公告发送完毕")
 
     #处理私聊消息
     elif data['type'] == 'privatemsg':
         if int(fromqq) == int(master):
             msg = otherImpl.TraditionalToSimplified(data['msg']['text'])#获取私聊消息,并将繁体转成简体
             if msg[:3] == '添加群':
-                botutils.addgroup(loginqq, msg[3:])
+                botutils.privatemsg(loginqq, master,botutils.addgroup(loginqq, msg[3:]))
                 botutils.privatemsg(loginqq,fromqq,'成功添加群聊')
+            elif msg[:2] == '公告':
+                botImpl.group_announcement(loginqq, msg[2:])
+                botutils.groupmsg(loginqq, master, "群公告发送完毕")
+
         else:
             #私聊消息
             fromqqname = data['fromqq']['nickname']#取昵称
@@ -167,7 +197,7 @@ if __name__ == '__main__':
         botImpl.write_json(word)
     botutils.privatemsg(botqq, master, '启动成功')
     try:
-        app.run(host='127.0.0.1', port=886, debug=False)  # 设置调试模式，生产模式的时候要关掉debug
+        app.run(host='0.0.0.0', port=886, debug=True)  # 设置调试模式，生产模式的时候要关掉debug
         app.run()
     except Exception as err:
         print('别问，问就是异常没处理')

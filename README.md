@@ -14,8 +14,8 @@
 wik|[wiki官方](https://www.mediawiki.org/wiki/API)
 wm|[wm官方](https://warframe.market/api_docs)
 rm|直接用的大佬的[接口](http://nymph.rbq.life:3000/rm/robot/)
-平原时间 |双服一样，为了快点我用的[国服](https://ordis.null00.com/v1/#)
-金星温度|双服一样，为了快点我用的[国服](https://ordis.null00.com/v1/#)
+平原时间 |双服一样[奥迪斯](https://ordis.null00.com/v1/#)
+金星温度|双服一样[奥迪斯](https://ordis.null00.com/v1/#)
 # 使用
 如果你直接下在exe成品使用的话需要你先打开小栗子框架
 

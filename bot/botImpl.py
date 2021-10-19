@@ -1,10 +1,36 @@
 import json,time,re
 import requests
-from bot import otherImpl
+from bot import otherImpl,botutils
 import os,sys
 headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36"}
 
+def 二次元(loginqq,group):
+    urls = ''
+    # for i in range(0,3):
+    #     url = requests.get('https://www.dmoe.cc/random.php').url
+    #     urls =urls + botutils.uploadgrouppic(loginqq, group, url,type='url')
+    for i in range(0,3):
+        url = requests.get('https://www.dmoe.cc/random.php?return=json').text
+        urls = urls + botutils.uploadgrouppic(loginqq, group, json.loads(url)['imgurl'], type='url')
+    return urls
+#仲裁信息
+def arbitration():
+   return '\t\n'+requests.get('http://nymph.rbq.life:3000/wf/robot/arbitration').text
+#突击信息
+def sortie(type = 0):
+    resp = requests.get('https://api.null00.com/world/ZHCN')
+    resp = json.loads(resp.text)['sortie']
+    gf = f'\t\n国服：今日突击:{resp["boss"]}\n派系:{resp["faction"]}' \
+         f'\n任务一：{resp["variants"][0]["missionType"]}\n限定:{resp["variants"][0]["modifierType"]}\n地点:{resp["variants"][0]["node"]}\n' \
+         f'\n任务二：{resp["variants"][1]["missionType"]}\n限定:{resp["variants"][1]["modifierType"]}\n地点:{resp["variants"][1]["node"]}\n' \
+         f'\n任务三：{resp["variants"][2]["missionType"]}\n限定:{resp["variants"][2]["modifierType"]}\n地点:{resp["variants"][2]["node"]}\n'
+    if type == 0:
+        return gf + '\t\n国际服:\n'+ requests.get('http://nymph.rbq.life:3000/wf/robot/sortie').text
+    elif type == 1:
+        return gf
+    else :
+        return  '\t\n'+requests.get('http://nymph.rbq.life:3000/wf/robot/sortie').text
 
 #奥迪斯攻略接口
 def ordis(msg):
@@ -36,13 +62,17 @@ def dayTime():
         hours = time.strftime('%H', time.localtime(times))
         hours = int(hours)-8
         time1 = time.strftime('%M分%S秒', time.localtime(times))
-        return f'\t\n现在时间是--白天--\n剩余时间:{hours}时{time1}'
+        return f'\t\n现在时间是--白天--\n剩余时间:{hours}时{time1}'
     else:
         times = times - int(time.time())
         hours = time.strftime('%H', time.localtime(times))
         hours = int(hours)-8
         time1 = time.strftime('%M分%S秒', time.localtime(times))
         return f'\t\n现在时间是--晚上--\n剩余时间:{hours}时{time1}'
+#地球时间
+def earthCycle():
+    return '\t\n'+requests.get('http://nymph.rbq.life:3000/wf/robot/earthCycle').text
+
 
 
 #奸商信息
@@ -50,23 +80,18 @@ def voidTrader():
     resp = requests.get('https://api.null00.com/world/ZHCN')
     resp = json.loads(resp.text)
     arrivals = resp['voidTrader']['arrivals']
-    times = resp['voidTrader']['expiry']
+    times = resp['voidTrader']['activation']
     place = resp['voidTrader']['node']
-    # times = int(times) - 28800000
     if arrivals:
         guofu = f'\t\n-------国服-------\n奸商已抵达：{place}'
     else:
-        times = int(times) - 288000
-        times = times - int(time.time())
-        # hours = time.strftime('%H', time.localtime(times))
-        # hours = int(hours) - 8
-        print(times)
-        time1 = time.strftime('%d天%H时%M分%S秒', time.localtime(times))
-        print(time1)
-        guofu = f'\t\n-------国服-------\n奸商到来时间还剩：{time1} \n地点：{place}'
+        times = times - 28800
+        times =times - int(time.time())
+        day = time.strftime('%d', time.localtime(times))
+        time1 = time.strftime('%H时%M分%S秒', time.localtime(times))
+        guofu = f'\t\n-------国服-------\n奸商到来时间：{int(day)-1}天{time1} \n地点：{place}'
     guojifu = requests.get('http://nymph.rbq.life:3000/wf/robot/voidTrader').text
     return f'{guofu}\n\n-------国际服-------\n{guojifu}'
-
 
 #星际战甲金星温度判断
 def states(state):
@@ -102,8 +127,8 @@ def hw2():
 
 #warframe玄骸紫卡交易
 def wfrm(loginqq, group,str):
-    resp = requests.get(f'http://nymph.rbq.life:3000/rm/robot/{str.replace(" ","")}')
-    otherImpl.toImage(loginqq, group,resp.text,'wfrm')
+    resp = requests.get(f'http://nymph.rbq.life:3000/rm/robot/{str.replace(" ","")}').text
+    botutils.groupmsg(loginqq, group, otherImpl.toImage(loginqq, group, resp, 'wfrm'))
 
 
 #warframe物品交易
@@ -171,6 +196,7 @@ def botci(str):
     except:
         return resp
 
+#输出和写入json数据到文件
 def write_json(obj):
     #首先读取已有的json文件中的内容
     botpath = os.path.dirname(os.path.realpath(sys.argv[0])) + '\\botqq.json'
@@ -195,6 +221,7 @@ def write_json(obj):
                 json.dump(item_list, f2, ensure_ascii=False)
                 f2.close()
             return '口令新增成功'
+
 #添加指令
 word = {}
 def password(msg):
@@ -206,6 +233,80 @@ def password(msg):
     }
 
     return  write_json(word)
+
+#查询所有口令
+def queryAll_json():
+    botpath = os.path.dirname(os.path.realpath(sys.argv[0])) + '\\botqq.json'
+    cont = '\t'
+    with open(botpath, 'r', encoding='utf-8') as f:
+        item_list = json.loads(f.read())
+        f.close()
+        for i in item_list:
+           cont = cont + '\n'+i['instruction']
+    return cont
+#删除json节点
+def delete_json(msg):
+    botpath = os.path.dirname(os.path.realpath(sys.argv[0])) + '\\botqq.json'
+    cont = 0
+    with open(botpath, 'r', encoding='utf-8') as f:
+        item_list = json.loads(f.read())
+        f.close()
+        for i in item_list:
+            if i['instruction'] == msg:
+                del item_list[cont]
+                with open('botqq.json', 'w', encoding='utf-8') as f2:
+                    json.dump(item_list, f2, ensure_ascii=False)
+                    f2.close()
+                return '删除成功'
+            cont += 1
+    return '删除失败'
+
+#发送群公告
+def group_announcement(logonqq,msg):
+    list = botutils.getgrouplist(logonqq)
+    print(list)
+    for i in list:
+        botutils.groupmsg(logonqq,i['groupnum'],msg)
+
+#遗物查询功能
+def search_relics(loginqq, group,search):
+    url = f'https://www.ourwarframe.com/app/api/index/list?page=1&pageSize=10&search={search}&type&stock'
+    ret = ''
+    resp = requests.get(url).text
+    resp = json.loads(resp)
+    data = resp['data']
+    for text in data:
+        size = f'遗物:{text["name"]}\n' \
+               f'铜档:\n{text["copper_1"]["name"]}\t价值奸商币{text["copper_1"]["price"]}\n{text["copper_2"]["name"]}\t价值奸商币{text["copper_2"]["price"]}\n{text["copper_3"]["name"]}\t价值奸商币{text["copper_3"]["price"]}\n' \
+               f'银档:\n{text["silver_1"]["name"]}\t价值奸商币{text["silver_1"]["price"]}\n{text["silver_2"]["name"]}\t价值奸商币{text["silver_2"]["price"]}\n' \
+               f'金档:\n{text["gold"]["name"]}\t价值奸商币{text["gold"]["price"]}\n ' \
+               f'数据由{text["contribute"]}提供\n核桃'
+        if text["stock"] != True:
+            size = size + '暂未入库'
+        else:
+            size = size + '已入库'
+
+        ret = ret + otherImpl.toImage(loginqq, group,size,'relics')
+
+    botutils.groupmsg(loginqq,group,ret)
+
+
 #菜单
 def caidan():
-    return f'\t\n你要的菜单来了\n---菜单---\n战甲攻略  关键词\nwiki  关键词\n物品交易: wm \n紫卡玄骸交易：rm\n平原时间 \n金星温度 \n火卫二 \n虚空商人 \n ↓↓↓主人指令↓↓↓\n添加群 + 群号'
+    return f'\t\n你要的菜单来了' \
+           f'\n---菜单---' \
+           f'\n攻略  关键词' \
+           f'\nwiki  关键词' \
+           f'\n物品交易: wm ' \
+           f'\n紫卡交易：rm & zk' \
+           f'\n平原时间 & 地球时间' \
+           f'\n金星温度 ' \
+           f'\n火卫二 & hw2' \
+           f'\n虚空商人 & 奸商 ' \
+           f'\n双服突击 ' \
+           f'\n仲裁 & 仲裁任务' \
+           f'\n查询口令' \
+           f'\n遗物 关键词(仅支持国服)' \
+           f'\n ↓↓↓主人指令↓↓↓' \
+           f'\n添加群 + 群号' \
+           f'\n新增口令'

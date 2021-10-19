@@ -24,23 +24,38 @@ def privatemsg(login,toqq,text):
 def getlogonqq():
     url = configs.get('url')+'/getlogonqq'
     return requests.post(url).text
-#上传图片
-def uploadgrouppic(logonqq,group,path):
+#上传zk内容图片
+def uploadzkpic(loginqq,group,path):
     url = configs.get('url')+'/uploadgrouppic'
     data={
-        'logonqq': logonqq,
+        'logonqq': loginqq,
         'group': group,
         'type':"path",
         'pic':os.path.dirname(os.path.realpath(sys.argv[0]))+'\\'+path+'.png'
     }
     resp = requests.post(url, data=data).text
-    resp = json.loads(resp)
-    groupmsg(logonqq,group,resp['ret'])
+    resp = json.loads(resp)['ret']
+    return resp
+
+#上传群图片
+def uploadgrouppic(loginqq,group,path,type='path'):
+    url = configs.get('url')+'/uploadgrouppic'
+    data={
+        'logonqq': loginqq,
+        'group': group,
+        'type':type,
+        'pic':path
+    }
+    resp = requests.post(url, data=data).text
+    resp = json.loads(resp)['ret']
+    return resp
+
 #发送群聊消息
-def groupmsg(logonqq,group,msg):
+def groupmsg(logonqq,group,msg,type=''):
     url = configs.get('url') + '/sendgroupmsg'
     print('====>触发群消息' )
     data = {
+        'type':type,
         'logonqq': logonqq,
         'group':group,
         'msg':msg,
@@ -55,4 +70,13 @@ def addgroup(logonqq,group):
         'group': group,
         'msg': '你好我是奥迪斯'
     }
-    requests.post(url,data=data)
+    return requests.post(url,data=data)
+#取群列表
+def getgrouplist(logonqq):
+    url = configs.get('url')+'/getgrouplist'
+    data = {
+        'logonqq':logonqq
+    }
+    resp = requests.post(url,data=data).text
+    resp = json.loads(resp)['list']['List']
+    return resp
