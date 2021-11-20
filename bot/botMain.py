@@ -41,11 +41,10 @@ def index():
     try:
         data = json.loads(data)
         print(f'=======>收到私聊信息' if data['type'] != 'groupmsg' else f'===>接收到群：{data["fromgroup"]["name"]}的消息')
-
         msg_type(data)
-
     except:
         pass
+
 
 # {'type': 'privatemsg', 'fromqq': {'qq': 2996964572, 'qq2': 0, 'nickname': '黑猫'}, 'logonqq': 180802337, 'timestamp': {'recv': 1624788559, 'send': 1624788559}, 'fromgroup': {'group': 0}, 'msg': {'req': 39902, 'seq': 72057595659213644, 'random': 1621285708, 'type': 166, 'subtype': 134, 'subtemptype': 0, 'text': '吃好喝好', 'bubbleid': 0}, 'hb': {'type': 0}, 'file': {'id': '', 'md5': '', 'name': '', 'size': 0}, 'msgpart': {'seq': 0, 'count': 1, 'flag': 0}, 'sessiontoken': ''}
     return str(pass_list())
@@ -115,7 +114,20 @@ def msg_type(data):
 
         elif msg == '查询口令':
             botutils.groupmsg(loginqq, group,  botImpl.queryAll_json())
-
+        elif msg == '火卫二赏金':
+            botutils.groupmsg(loginqq,group,botImpl.allOutmsg('EntratiSyndicate'))
+        elif msg == '地球赏金':
+            botutils.groupmsg(loginqq,group,botImpl.allOutmsg('Ostrons'))
+        elif msg == '金星赏金':
+            botutils.groupmsg(loginqq,group,botImpl.allOutmsg('Solaris'))
+        elif msg == '达尔沃' or msg =='折扣':
+            botutils.groupmsg(loginqq,group,botImpl.allOutmsg('dailyDeals'))
+        elif msg == '地球赏金':
+            botutils.groupmsg(loginqq,group,botImpl.allOutmsg('Ostrons'))
+        elif msg == '入侵':
+            botutils.groupmsg(loginqq,group,botImpl.allOutmsg('invasions'))
+        elif msg == '活动':
+            botutils.groupmsg(loginqq,group,botImpl.allOutmsg('events'))
         elif msg[:2].lower()=='wm':
             mod_rank = ''
             if re.findall(f'[0-9]', msg[2:]):
@@ -142,7 +154,7 @@ def msg_type(data):
         elif msg[:4] == '删除口令' and int(fromqq) == int(master):
             botutils.groupmsg(loginqq, group, botImpl.delete_json(msg[4:]))
         elif msg[:2] == '公告' and int(fromqq) == int(master):
-            botImpl.group_announcement(loginqq,msg[2:])
+            botImpl.group_announcement(loginqq, msg[2:])
             botutils.groupmsg(loginqq,group,"群公告发送完毕")
 
     #处理私聊消息
@@ -195,10 +207,11 @@ if __name__ == '__main__':
             'content': master
         }
         botImpl.write_json(word)
-    botutils.privatemsg(botqq, master, '启动成功')
+
     try:
-        app.run(host='0.0.0.0', port=886, debug=True)  # 设置调试模式，生产模式的时候要关掉debug
+        app.run(host='0.0.0.0', port=886, debug=False)  # 设置调试模式，生产模式的时候要关掉debug
         app.run()
+        botutils.privatemsg(botqq, master, '启动成功')
     except Exception as err:
         print('别问，问就是异常没处理')
     # resetevent()

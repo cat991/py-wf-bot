@@ -17,6 +17,11 @@ def 二次元(loginqq,group):
 #仲裁信息
 def arbitration():
    return '\t\n'+requests.get('http://nymph.rbq.life:3000/wf/robot/arbitration').text
+
+
+#基于https://github.com/WsureDev/warframe-info-api接口开发的通用接口
+def allOutmsg(msg):
+    return '\t\n'+requests.get('http://nymph.rbq.life:3000/wf/robot/'+msg).text
 #突击信息
 def sortie(type = 0):
     resp = requests.get('https://api.null00.com/world/ZHCN')
@@ -86,10 +91,18 @@ def voidTrader():
         guofu = f'\t\n-------国服-------\n奸商已抵达：{place}'
     else:
         times = times - 28800
-        times =times - int(time.time())
-        day = time.strftime('%d', time.localtime(times))
-        time1 = time.strftime('%H时%M分%S秒', time.localtime(times))
-        guofu = f'\t\n-------国服-------\n奸商到来时间：{int(day)-1}天{time1} \n地点：{place}'
+        times = times - int(time.time())
+        if times < 0:
+            times = resp['voidTrader']['activation'] + 86400 - (int(time.time()) + 28800)
+            # times = (int(time.time())) -resp['voidTrader']['activation']
+            # times = int(str(times).replace('-',''))
+            day = time.strftime('%d', time.localtime(times))
+            time1 = time.strftime('%H时%M分%S秒', time.localtime(times))
+            guofu = f'\t\n-------国服-------\n奸商到来时间：{int(day) - 2}天{time1} \n地点：{place}'
+        else:
+            day = time.strftime('%d', time.localtime(times))
+            time1 = time.strftime('%H时%M分%S秒', time.localtime(times))
+            guofu = f'\t\n-------国服-------\n奸商到来时间：{int(day) - 1}天{time1} \n地点：{place}'
     guojifu = requests.get('http://nymph.rbq.life:3000/wf/robot/voidTrader').text
     return f'{guofu}\n\n-------国际服-------\n{guojifu}'
 
@@ -237,12 +250,12 @@ def password(msg):
 #查询所有口令
 def queryAll_json():
     botpath = os.path.dirname(os.path.realpath(sys.argv[0])) + '\\botqq.json'
-    cont = '\t'
+    cont = ''
     with open(botpath, 'r', encoding='utf-8') as f:
         item_list = json.loads(f.read())
         f.close()
         for i in item_list:
-           cont = cont + '\n'+i['instruction']
+           cont = cont + ','+i['instruction']
     return cont
 #删除json节点
 def delete_json(msg):
@@ -264,7 +277,6 @@ def delete_json(msg):
 #发送群公告
 def group_announcement(logonqq,msg):
     list = botutils.getgrouplist(logonqq)
-    print(list)
     for i in list:
         botutils.groupmsg(logonqq,i['groupnum'],msg)
 
